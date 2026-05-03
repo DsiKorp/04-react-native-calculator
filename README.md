@@ -2,6 +2,8 @@
 
 > Una aplicación de calculadora moderna y responsiva construida con **React Native** y **Expo**, disponible en iOS, Android y Web.
 
+**Características principales:** Operaciones matemáticas básicas (+, -, ×, ÷), interfaz intuitiva, gestión de decimales, cambio de signo, eliminación de dígitos y reseteo.
+
 ---
 
 ## ✨ Características
@@ -14,6 +16,9 @@
 - ♿ **Accesibilidad mejorada** con haptic feedback
 - 🔤 **Tipado completo** con TypeScript
 - 📐 **Diseño multiplataforma** - iOS, Android y Web
+- ➕ **Operaciones matemáticas completas** - suma, resta, multiplicación y división
+- 🔢 **Soporte para decimales** y cambio de signo
+- ⌫ **Control preciso** - eliminar dígitos y resetear operaciones
 
 ---
 
@@ -134,33 +139,23 @@ Escanea el código QR con la aplicación [Expo Go](https://expo.dev/go) en tu di
 04-calculator-app-dsk/
 ├── app/                          # Directorio de enrutamiento (Expo Router)
 │   ├── _layout.tsx              # Layout principal
-│   ├── modal.tsx                # Pantalla modal
-│   └── (tabs)/                  # Navegación con pestañas
-│       ├── _layout.tsx
-│       ├── index.tsx            # Pantalla principal
-│       └── explore.tsx          # Pantalla de exploración
+│   └── index.tsx                # Pantalla principal de la calculadora
 │
 ├── components/                   # Componentes reutilizables
-│   ├── themed-text.tsx          # Texto con tema
-│   ├── themed-view.tsx          # Vista con tema
-│   ├── parallax-scroll-view.tsx # Scroll con efecto parallax
-│   ├── hello-wave.tsx           # Componente de saludo
-│   ├── haptic-tab.tsx           # Tab con feedback háptico
-│   ├── external-link.tsx        # Enlace externo
-│   └── ui/                      # Componentes UI
-│       ├── collapsible.tsx
-│       ├── icon-symbol.tsx
-│       └── icon-symbol.ios.tsx
+│   ├── CalculatorButton.tsx     # Botón de la calculadora (números y operadores)
+│   └── ThemeText.tsx            # Componente de texto con tema automático
 │
 ├── constants/                    # Constantes de la aplicación
-│   └── theme.ts                 # Configuración de temas
+│   └── Colors.ts                # Configuración de colores y temas
 │
 ├── hooks/                        # Hooks personalizados
-│   ├── use-color-scheme.ts      # Hook para esquema de color
-│   ├── use-color-scheme.web.ts  # Versión web del hook
-│   └── use-theme-color.ts       # Hook para colores del tema
+│   └── useCalculator.tsx        # Hook principal de la lógica de calculadora
+│
+├── styles/                       # Estilos globales
+│   └── global-styles.ts         # Estilos reutilizables
 │
 ├── assets/                       # Recursos estáticos
+│   ├── fonts/                   # Fuentes personalizadas
 │   └── images/                  # Imágenes
 │
 ├── app.json                     # Configuración de Expo
@@ -168,6 +163,72 @@ Escanea el código QR con la aplicación [Expo Go](https://expo.dev/go) en tu di
 ├── tsconfig.json                # Configuración de TypeScript
 ├── eslint.config.js             # Configuración de ESLint
 └── README.md                    # Este archivo
+```
+
+---
+
+## 🏗️ Arquitectura de la Calculadora
+
+### Flujo de Datos
+
+```
+┌─────────────────────────────────────────┐
+│      useCalculator Hook                 │
+│  (Lógica y Estado de la Calculadora)    │
+└────────────┬────────────────────────────┘
+             │
+             ├─ Mantiene el estado: number, formula, prevNumber
+             ├─ Maneja operaciones: +, -, ×, ÷
+             ├─ Realiza cálculos sub-operaciones
+             └─ Retorna funciones de acción
+                 │
+                 ├─ addOperation()
+                 ├─ subtractOperation()
+                 ├─ multiplyOperation()
+                 ├─ divideOperation()
+                 ├─ calculateResult()
+                 ├─ deleteLast()
+                 ├─ toggleSign()
+                 └─ clean()
+                     │
+                     ↓
+         ┌──────────────────────────┐
+         │  Componentes UI          │
+         ├──────────────────────────┤
+         │ • CalculatorButton       │
+         │ • ThemeText              │
+         │ • Pantalla de resultado  │
+         └──────────────────────────┘
+```
+
+### Estados Principales
+
+| Estado | Descripción | Ejemplo |
+|--------|-----------|---------|
+| `number` | Número actual siendo ingresado | `"42"` |
+| `formula` | Fórmula completa con operador | `"15 + 25"` |
+| `prevNumber` | Resultado de la sub-operación | `"40"` |
+| `lastOperation` | Última operación realizada | `"+"` |
+
+---
+
+## 🧮 Lógica de Operaciones
+
+El hook `useCalculator` implementa una máquina de estados que:
+
+1. **Captura números**: Acumula dígitos en el estado `number`
+2. **Registra operador**: Guarda la operación en `lastOperation`
+3. **Calcula sub-resultado**: Muestra resultado parcial en `prevNumber`
+4. **Resultado final**: Ejecuta `calculateResult()` para obtener el resultado
+
+```typescript
+// Ejemplo: 15 + 25 =
+number: "15"                    // Usuario escribe 15
+addOperation()                  // Usuario presiona +
+number: "25"                    // Usuario escribe 25
+formula: "15 + 25"             // Se actualiza la fórmula
+calculateResult()              // Usuario presiona =
+number: "40"                   // Resultado mostrado
 ```
 
 ---
@@ -192,6 +253,102 @@ npm run lint
 
 # Resetear el proyecto (crea un directorio app limpio)
 npm run reset-project
+```
+
+---
+
+## 💡 Ejemplo de Uso
+
+### Hook `useCalculator`
+
+El corazón de la aplicación es el hook personalizado `useCalculator` que maneja toda la lógica de cálculo:
+
+```typescript
+import { useCalculator } from '@/hooks/useCalculator';
+
+export default function CalculatorScreen() {
+  const {
+    formula,           // La fórmula completa: "15 + 25"
+    number,            // Número actual: "40"
+    prevNumber,        // Resultado anterior: "40"
+    clean,             // Limpia todo
+    toggleSign,        // Cambia el signo (+/-)
+    deleteLast,        // Elimina el último dígito
+    addOperation,      // Suma
+    subtractOperation, // Resta
+    multiplyOperation, // Multiplicación
+    divideOperation,   // División
+    decimalOperation,  // Agrega decimal
+    calculateResult    // Calcula el resultado
+  } = useCalculator();
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.formula}>{formula}</Text>
+      <Text style={styles.result}>{number}</Text>
+    </View>
+  );
+}
+```
+
+### Operaciones Disponibles
+
+```typescript
+// Operaciones aritméticas básicas
+clean();              // Resetea la calculadora a "0"
+addOperation();       // Suma
+subtractOperation();  // Resta
+multiplyOperation();  // Multiplicación
+divideOperation();    // División
+calculateResult();    // Calcula el resultado final
+
+// Operaciones especiales
+toggleSign();         // Cambia 5 a -5 o viceversa
+deleteLast();         // Elimina el último dígito
+decimalOperation();   // Agrega un punto decimal
+```
+
+### Componentes Principales
+
+#### **CalculatorButton**
+Botón reutilizable para los números y operadores:
+
+```typescript
+<CalculatorButton
+  label="7"
+  onPress={() => pressNumber('7')}
+  type="number"
+/>
+
+<CalculatorButton
+  label="+"
+  onPress={addOperation}
+  type="operation"
+/>
+
+<CalculatorButton
+  label="="
+  onPress={calculateResult}
+  type="equals"
+/>
+```
+
+#### **ThemeText**
+Componente de texto que se adapta automáticamente al tema:
+
+```typescript
+<ThemeText style={styles.result} type="title">
+  {number}
+</ThemeText>
+```
+
+### Ejemplo de Cálculo Completo
+
+```
+1. Usuario presiona: 5 + 3 = 
+2. Formula se actualiza: "5 + 3"
+3. Resultado mostrado: "8"
+4. prevNumber guarda el resultado para la siguiente operación
 ```
 
 ---
