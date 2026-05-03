@@ -1,1 +1,11 @@
 bun create expo
+bun expo install expo-navigation-bar
+
+https://docs.expo.dev/versions/latest/sdk/navigation-bar/
+https://docs.expo.dev/versions/latest/sdk/haptics/
+
+bun expo install expo-haptics
+rnfe
+rnf
+
+
