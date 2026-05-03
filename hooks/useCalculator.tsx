@@ -34,7 +34,7 @@ export const useCalculator = () => {
     setPrevNumber('0');
     setFormula('0');
 
-    //lastOperation.current = undefined;
+    lastOperation.current = undefined;
   };
 
   const toggleSign = () => {
@@ -122,7 +122,7 @@ export const useCalculator = () => {
     const result = calculateSubResult();
     setFormula(`${result}`);
 
-    //lastOperation.current = undefined;
+    lastOperation.current = undefined;
     setPrevNumber('0');
   };
 
